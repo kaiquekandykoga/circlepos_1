@@ -1,8 +1,14 @@
 def isbn13(input)
   raise ArgumentError, "input must be exactly 12 digits" unless input.is_a?(String) && input.match?(/\A\d{12}\z/)
 
-  sum = input.chars.each_with_index.sum { |c, i| c.to_i * (i.even? ? 1 : 3) }
-  check = (10 - sum % 10) % 10
+  digits = input.chars.map(&:to_i)
+  weighted = digits.each_with_index.map { |digit, i| digit * (i.even? ? 1 : 3) }
+
+  sum = weighted.sum           # 1. Sum
+  remainder = sum % 10         # 2. Mod 10
+  check = 10 - remainder       # 3. Subtract
+  check = 0 if check == 10     # 4. If it's 10, use 0
+
   input + check.to_s
 end
 
