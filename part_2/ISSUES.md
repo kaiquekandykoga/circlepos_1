@@ -1,6 +1,6 @@
 # Part 2 - Issues in `GiftCardUndoJob`
 
-Ordered by production risk: money correctness first, then operations, then style.
+Ordered by production risk: money correctness first, then operations.
 
 ---
 
@@ -36,7 +36,18 @@ if response["ResponseCode"].to_i.zero?
 
 ---
 
-## 3. Retries never stop
+## 3. `update_column` skips callbacks, validations and `updated_at`
+
+```ruby
+transaction.update_column(:refunded, true)
+```
+
+Callbacks (auditing, balance sync, webhooks, cache invalidation) don't run, `updated_at` doesn't change, and nothing records when the refund was confirmed or what the provider returned.
+
+**Impact:** Downstream logic never sees the refund, and the audit trail is empty exactly where disputes and reconciliation need it.
+---
+
+## 4. Retries never stop
 
 ```ruby
 else
@@ -57,7 +68,7 @@ Every non-zero response and every exception re-enqueues in 30 seconds, with no a
 
 ---
 
-## 4. The bare `rescue` hides every failure, bugs included
+## 5. The bare `rescue` hides every failure, bugs included
 
 ```ruby
 rescue
@@ -66,11 +77,11 @@ rescue
 
 `rescue` catches all `StandardError`s: programming errors (`NoMethodError` on a `nil` response, an `ArgumentError` from a changed `GiftCardService` signature), DB errors and enqueue errors. Nothing is logged or reported, and the job always "succeeds".
 
-**Impact:** A deploy that breaks `GiftCardService` turns every undo into a silent infinite loop (see #3). The adapter's retry counts, backoff, dead set and dashboards are bypassed, and on-call has nothing to debug with.
+**Impact:** A deploy that breaks `GiftCardService` turns every undo into a silent infinite loop (see #4). The adapter's retry counts, backoff, dead set and dashboards are bypassed, and on-call has nothing to debug with.
 
 ---
 
-## 5. Missing records are handled inconsistently
+## 6. Missing records are handled inconsistently
 
 ```ruby
 transaction = GiftCardTransaction.find(transaction_id)
@@ -81,23 +92,3 @@ Both `find` calls sit outside the `rescue`, so `RecordNotFound` goes to the adap
 
 **Impact:** Noisy retries and dead jobs for deleted records, pointless delays for uncommitted ones, and two error paths that behave differently.
 
----
-
-## 6. `update_column` skips callbacks, validations and `updated_at`
-
-```ruby
-transaction.update_column(:refunded, true)
-```
-
-Callbacks (auditing, balance sync, webhooks, cache invalidation) don't run, `updated_at` doesn't change, and nothing records when the refund was confirmed or what the provider returned.
-
-**Impact:** Downstream logic never sees the refund, and the audit trail is empty exactly where disputes and reconciliation need it.
-
----
-
-## 7. Lower-priority items
-
-- **Site and transaction aren't cross-checked.** A wrong `site_id` sends the undo with another site's provider credentials.
-- **Hand-rolled retry instead of `retry_on`.** Each `set(wait:).perform_later` starts a fresh job, so `executions` and attempt history are lost. `retry_on` / `discard_on` already give bounded, backed-off, observable retries.
-- **`retry_undo` can raise inside the `rescue`.** If enqueueing fails (Redis or queue DB down), the `rescue` calls it again, which fails the same way and escapes without context.
-- **Style.** 4-space indentation instead of Ruby's usual 2, which adds diff noise.
