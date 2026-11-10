@@ -1,24 +1,89 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    activejob (8.1.4.1)
+      activesupport (= 8.1.4.1)
+      globalid (>= 0.3.6)
+    activemodel (8.1.4.1)
+      activesupport (= 8.1.4.1)
+    activerecord (8.1.4.1)
+      activemodel (= 8.1.4.1)
+      activesupport (= 8.1.4.1)
+      timeout (>= 0.4.0)
+    activesupport (8.1.4.1)
+      base64
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.3.1)
+      connection_pool (>= 2.2.5)
+      drb
+      i18n (>= 1.6, < 2)
+      json
+      logger (>= 1.4.2)
+      minitest (>= 5.1)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
+    base64 (0.3.0)
+    bigdecimal (4.1.3)
+    concurrent-ruby (1.3.8)
+    connection_pool (3.0.2)
+    drb (2.2.3)
+    globalid (1.4.0)
+      activesupport (>= 6.1)
+    i18n (1.15.2)
+      concurrent-ruby (~> 1.0)
+    json (3.1.0)
+    logger (1.7.0)
+    minitest (6.1.0)
+      drb (~> 2.0)
+      prism (>= 1.5, < 3)
     power_assert (3.1.0)
+    prism (2.1.0-arm64-darwin)
     rake (13.4.2)
+    securerandom (0.4.1)
+    sqlite3 (2.10.2-arm64-darwin)
     test-unit (3.7.8)
       power_assert
+    timeout (0.6.1)
+    tzinfo (2.0.6)
+      concurrent-ruby (~> 1.0)
+    uri (1.1.2)
 
 PLATFORMS
   arm64-darwin-25
-  ruby
 
 DEPENDENCIES
+  activejob (~> 8.1)
+  activerecord (~> 8.1)
   rake (~> 13.0)
+  sqlite3 (~> 2.1)
   test-unit (~> 3.7)
 
 CHECKSUMS
+  activejob (8.1.4.1)
+  activemodel (8.1.4.1)
+  activerecord (8.1.4.1)
+  activesupport (8.1.4.1)
+  base64 (0.3.0)
+  bigdecimal (4.1.3)
   bundler (4.0.21) sha256=7cbf5499b426076aa16c8d28a59e4c2c3aad5a438402abcd961f0119f29f1dd0
+  concurrent-ruby (1.3.8)
+  connection_pool (3.0.2)
+  drb (2.2.3)
+  globalid (1.4.0)
+  i18n (1.15.2)
+  json (3.1.0)
+  logger (1.7.0)
+  minitest (6.1.0)
   power_assert (3.1.0) sha256=fefe98ed5d3140628138f3f9f9194d6ece01f1320e69700d3c928adca7518251
+  prism (2.1.0-arm64-darwin)
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
+  securerandom (0.4.1)
+  sqlite3 (2.10.2-arm64-darwin)
   test-unit (3.7.8) sha256=689d1ca53f4d46f678b4e5d68d8e4294f87fc5e8b9238cc4de7c5727e8d65943
+  timeout (0.6.1)
+  tzinfo (2.0.6)
+  uri (1.1.2)
 
 BUNDLED WITH
   4.0.21
