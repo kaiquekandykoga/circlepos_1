@@ -48,3 +48,11 @@ class GiftCardUndoJob < ApplicationJob
     end
 end
 ```
+
+#### What to Submit
+
+List the issues in priority order, starting with the ones that matter most in production.
+
+Explain the likely impact of those issues, then show a minimal patch that you would actually be comfortable shipping.
+
+Prefer a small safe fix over a broad rewrite.
