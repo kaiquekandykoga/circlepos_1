@@ -1,6 +1,6 @@
 ## Triage Plan
 
-Understanding the problem and its root cause is always the first step. Normally, I examine logs, observability tools, and available data. In some cases, I rely on screenshots provided by the operations team or other relevant artifacts to assist with triaging. If I am faced with partial logs and incomplete context, I typically need to simulate the issue in a local or test environment to pinpoint the root cause before implementing a fix
+Understanding the problem and its root cause is always the first step. Normally, I examine logs, observability tools, and available data. In some cases, I rely on screenshots provided by the operations team or other relevant artifacts to assist with triaging. If I am faced with partial logs and incomplete context, I typically need to simulate the issue in a local or test environment to pinpoint the root cause before implementing a fix. I'd hold off on creating a fix until I can replicate the issue that way, I can be more confident in what's causing it
 
 ## Risks and Unknowns
 
