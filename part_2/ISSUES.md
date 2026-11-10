@@ -6,6 +6,13 @@ Ordered by production risk: money correctness first, then operations, then style
 
 ## 1. No idempotency guard, so the same undo can run twice
 
+```ruby
+def perform(site_id, transaction_id, remote_transaction_id)
+  transaction = GiftCardTransaction.find(transaction_id)
+  ...
+  undo_transaction(site, transaction, remote_transaction_id)
+```
+
 `perform` never checks `transaction.refunded?` before calling the provider. A second undo gets sent when:
 
 - the provider applies the undo but the response is lost (timeout, reset, parse error), and the bare `rescue` re-enqueues;
@@ -20,6 +27,7 @@ Ordered by production risk: money correctness first, then operations, then style
 
 ```ruby
 if response["ResponseCode"].to_i.zero?
+  transaction.update_column(:refunded, true)
 ```
 
 `nil.to_i`, `"".to_i` and `"ERR".to_i` are all `0`. An error payload with a different shape, an empty hash, a proxy/maintenance page body or a non-numeric code all mark the transaction refunded.
@@ -29,6 +37,14 @@ if response["ResponseCode"].to_i.zero?
 ---
 
 ## 3. Retries never stop
+
+```ruby
+else
+  retry_undo(site.id, transaction.id, remote_transaction_id)
+end
+rescue
+  retry_undo(site.id, transaction.id, remote_transaction_id)
+```
 
 Every non-zero response and every exception re-enqueues in 30 seconds, with no attempt limit. Permanent failures ("already voided", "not found", "card closed", bad `remote_transaction_id`) are treated as temporary.
 
@@ -43,6 +59,11 @@ Every non-zero response and every exception re-enqueues in 30 seconds, with no a
 
 ## 4. The bare `rescue` hides every failure, bugs included
 
+```ruby
+rescue
+  retry_undo(...)
+```
+
 `rescue` catches all `StandardError`s: programming errors (`NoMethodError` on a `nil` response, an `ArgumentError` from a changed `GiftCardService` signature), DB errors and enqueue errors. Nothing is logged or reported, and the job always "succeeds".
 
 **Impact:** A deploy that breaks `GiftCardService` turns every undo into a silent infinite loop (see #3). The adapter's retry counts, backoff, dead set and dashboards are bypassed, and on-call has nothing to debug with.
@@ -51,6 +72,11 @@ Every non-zero response and every exception re-enqueues in 30 seconds, with no a
 
 ## 5. Missing records are handled inconsistently
 
+```ruby
+transaction = GiftCardTransaction.find(transaction_id)
+site = Site.find(site_id)
+```
+
 Both `find` calls sit outside the `rescue`, so `RecordNotFound` goes to the adapter's default retry policy, unlike every other failure. If the job is enqueued before the surrounding DB transaction commits, the first run fails for no real reason.
 
 **Impact:** Noisy retries and dead jobs for deleted records, pointless delays for uncommitted ones, and two error paths that behave differently.
@@ -58,6 +84,10 @@ Both `find` calls sit outside the `rescue`, so `RecordNotFound` goes to the adap
 ---
 
 ## 6. `update_column` skips callbacks, validations and `updated_at`
+
+```ruby
+transaction.update_column(:refunded, true)
+```
 
 Callbacks (auditing, balance sync, webhooks, cache invalidation) don't run, `updated_at` doesn't change, and nothing records when the refund was confirmed or what the provider returned.
 
