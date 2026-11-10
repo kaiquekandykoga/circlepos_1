@@ -73,12 +73,12 @@ end
 
 ## How You Verified It
 
-Automated tests (`bin/rails test`): 8 runs, 24 assertions, 0 failures.
+Automated tests with RSpec (`bundle exec rspec`): 12 examples, 0 failures.
 
-- `test/models/isbn13_test.rb`: the spec example (`978014300723` gives `9780143007234`),
+- `spec/models/isbn13_spec.rb`: the spec example (`978014300723` gives `9780143007234`),
   the case where the check digit becomes 0, a missing prefix, and malformed
   prefixes (too short, too long, letters, dashes, whitespace).
-- `test/controllers/isbn13_controller_test.rb`: the 200 response body, a 422
+- `spec/requests/isbn13_spec.rb`: the 200 response body, a 422
   for a missing prefix, a 422 for a malformed prefix, and an array param being rejected.
 
 Lint: `bin/rubocop` reports no offenses.
@@ -104,6 +104,6 @@ HTTP/1.1 422 Unprocessable Content
 
 ```
 bundle install
-bin/rails test
+bundle exec rspec
 bin/rails server
 ```
